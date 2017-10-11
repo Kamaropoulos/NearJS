@@ -16,7 +16,7 @@ near.on('test', function(x){
 var result = near.hostCall('dory', {num, foo});
 console.log(`node :: near.hostCall() = ${result}`);
 
-process.on('test', near.hostOn('exit'))
+process.on('test', near.hostOn('exit'));
 process.on('exit', near.hostOn('exit'));
 
 process.emit('test', 'a', 20, {num, foo});
