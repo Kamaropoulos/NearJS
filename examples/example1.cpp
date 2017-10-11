@@ -10,7 +10,7 @@
 #define SLEEP_ONE_SECOND usleep(1000*1000);
 #endif
 
-#include "../include/near.hpp"
+#include <near.hpp>
 
 using namespace std;
 
