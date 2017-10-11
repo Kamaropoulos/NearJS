@@ -1,24 +1,23 @@
 'use strict'
 
-// print toby.version
-console.log(`node :: toby.version = ${toby.version}`);
+// print near.version
+console.log(`node :: near.version = ${near.version}`);
 
-// assgined from example.cpp
-console.log(`node :: _v = ${_v}`);
+// assgined from example1.cpp
+console.log(`near :: _v = ${_v}`);
 
 var num = 42;
 var foo = 'foo';
 
-toby.on('test', function(x){
-  console.log(`node :: toby.on(test) = ${x}`);
+near.on('test', function(x){
+  console.log(`node :: near.on(test) = ${x}`);
 });
 
-var result = toby.hostCall('dory', {num, foo});
-console.log(`node :: toby.hostCall() = ${result}`);
+var result = near.hostCall('dory', {num, foo});
+console.log(`node :: near.hostCall() = ${result}`);
 
-process.on('test', toby.hostOn('exit'))
-process.on('exit', toby.hostOn('exit'));
-//process.on('exit', function(code){console.log(`exit with ${code}`)});
+process.on('test', near.hostOn('exit'))
+process.on('exit', near.hostOn('exit'));
 
 process.emit('test', 'a', 20, {num, foo});
 
