@@ -1,4 +1,4 @@
-# NodeJS Embeded Application Runtime for C++
+# NodeJS Embedded Application Run-time for C++
 
 ## Example - Simple
 ```c++
@@ -21,6 +21,8 @@ int main(int argc, char *argv[]) {
 #include <iostream>
 #include <string>
 
+#include <near.hpp>
+
 #ifdef _WIN32
 #include <windows.h>
 #define SLEEP_ONE_SECOND Sleep(1000);
@@ -28,7 +30,6 @@ int main(int argc, char *argv[]) {
 #include <unistd.h>
 #define SLEEP_ONE_SECOND usleep(1000*1000);
 #endif
-
 
 using namespace std;
 
