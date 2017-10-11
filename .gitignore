@@ -31,3 +31,5 @@ example.dSYM
 *.exe
 *.out
 *.app
+
+cmake-build-debug
