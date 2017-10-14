@@ -43,13 +43,16 @@ void nearOnLoad(void* isolate) {
                        "var _v = 43;";
 
   char data[1024];
+  
   int ret = nearJSCompile(source, data, sizeof(data));
+  
   if (ret < 0)
     cout << "** nearJSCompile error - code : " << ret << " , data : " << data << endl;
   else
     cout << "** nearJSCompile : " << data << endl;
 
   ret = nearJSCall("_f", "", data, sizeof(data));
+  
   if (ret < 0)
     cout << "** nearJSCall error - code : " << ret << " , data : " << data << endl;
   else
@@ -86,6 +89,7 @@ int main(int argc, char *argv[]) {
 
   // dummy loop in host
   static int i = 0;
+  
   while(true) {
     SLEEP_ONE_SECOND;
     nearJSEmit("test", to_string(i++).c_str());
