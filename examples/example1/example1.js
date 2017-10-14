@@ -9,8 +9,8 @@ console.log(`near :: _v = ${_v}`);
 var num = 42;
 var foo = 'foo';
 
-near.on('test', function(x){
-  console.log(`node :: near.on(test) = ${x}`);
+near.on('test', function (x) {
+    console.log(`node :: near.on(test) = ${x}`);
 });
 
 var result = near.hostCall('dory', {num, foo});
@@ -22,6 +22,8 @@ process.on('exit', near.hostOn('exit'));
 process.emit('test', 'a', 20, {num, foo});
 
 // exit after 2 secs
-(function(){setTimeout(function(){
-	process.exitCode = 42;
-},2000)})();
+(function () {
+    setTimeout(function () {
+        process.exitCode = 42;
+    }, 2000)
+})();
