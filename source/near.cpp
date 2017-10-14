@@ -41,6 +41,7 @@ namespace near {
     typedef void  (*NearOnunloadCallback)(void*, int);
     typedef char* (*NearHostCallCallback)(const char*, const char*);
     typedef void  (*NearHostonCB)(int argc, char** argv);
+    typedef void  (*methodPointer)(const FunctionCallbackInfo<Value>&);
 
     extern "C" NEAR_EXTERN int nearJSCompile(const char* source, char* dest, size_t n);
     extern "C" NEAR_EXTERN int nearJSCall(const char* name, const char* value, char* dest, size_t n);
@@ -51,6 +52,7 @@ namespace near {
                                          NearOnloadCallback _nearOnLoad,
                                          NearOnunloadCallback _nearOnUnload,
                                          NearHostCallCallback _nearHostCall);
+    extern "C" NEAR_EXTERN void nearSetMethod(const char* methodName, methodPointer pointer);
 
     class ArrayBufferAllocator : public ArrayBuffer::Allocator {
     public:
@@ -64,6 +66,16 @@ namespace near {
 
     static uv_loop_t* loop;
     static Isolate* isolate_;
+
+    struct UserMethod {
+        const char* methodName;
+        methodPointer method;
+
+        UserMethod(const char *methodName, void (*method)(const FunctionCallbackInfo<Value> &)) : methodName(
+                methodName), method(method) {}
+    };
+
+    static vector<UserMethod> userMethods;
 
     NearOnloadCallback nearOnLoad;
     NearOnunloadCallback nearOnUnload;
@@ -373,12 +385,20 @@ namespace near {
       assert(obj->IsObject());
     }
 
+    void nearSetMethod(const char* methodName, methodPointer pointer){
+        userMethods.push_back(UserMethod(methodName, pointer));
+    }
+
     static void init(Local<Object> exports) {
       AtExit(atExitCB, exports->GetIsolate());
 
       NODE_SET_METHOD(exports, "hostCall", HostCallMethod);
       NODE_SET_METHOD(exports, "hostOn", HostOnMethod);
       NODE_SET_METHOD(exports, "on", OnMethod);
+
+      for (auto method = userMethods.begin(); method != userMethods.end(); ++method) {
+          NODE_SET_METHOD(exports, method->methodName, method->method);
+      }
 
       exports->DefineOwnProperty(
               exports->GetIsolate()->GetCurrentContext(),
