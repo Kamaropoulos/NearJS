@@ -14,7 +14,7 @@ typedef char *(*NearHostcallCB)(const char *name, const char *value);
 
 typedef void  (*NearHostonCB)(int argc, char **argv);
 
-typedef void (*methodPointer)(const v8::FunctionCallbackInfo<v8::Value> &);
+typedef void (*nearMethodPointer)(const v8::FunctionCallbackInfo<v8::Value> &);
 
 typedef const v8::FunctionCallbackInfo<v8::Value> &NearArguments;
 
@@ -27,6 +27,6 @@ extern "C" int nearJSCompile(const char *source, char *dest, size_t n);
 extern "C" int nearJSCall(const char *name, const char *value, char *dest, size_t n);
 extern "C" int nearJSEmit(const char *name, const char *value);
 extern "C" int nearHostOn(const char *name, NearHostonCB);
-extern "C" void nearSetMethod(const char *methodName, methodPointer pointer);
+extern "C" void nearSetMethod(const char *methodName, nearMethodPointer pointer);
 
 #endif //NEARJS_NEAR_HPP
