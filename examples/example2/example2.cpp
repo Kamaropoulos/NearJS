@@ -18,6 +18,7 @@ using namespace std;
 
 static void helloWorld(NearArguments args) {
     cout << "Hello World!" << endl;
+    nearReturn(args, 5);
 }
 
 int main(int argc, char *argv[]) {
