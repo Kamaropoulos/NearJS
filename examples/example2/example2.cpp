@@ -18,13 +18,18 @@ using namespace std;
 
 static void helloWorld(NearArguments args) {
     cout << "Hello World!" << endl;
-    nearReturn(args, 5);
+    nearReturn(args, to_string(5).c_str());
+}
+
+static void getString(NearArguments args){
+    nearReturn(args, "Hey there!");
 }
 
 int main(int argc, char *argv[]) {
     const char *userScript = "require('./example2.js');";
 
     nearSetMethod("helloWorld", helloWorld);
+    nearSetMethod("getString", getString);
 
     nearInit(nullptr, userScript, nullptr, nullptr, nullptr);
 
