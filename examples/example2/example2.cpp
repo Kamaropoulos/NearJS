@@ -25,11 +25,16 @@ static void getString(NearArguments args){
     nearReturn(args, "Hey there!");
 }
 
+static void badMethod(NearArguments args){
+    nearError(args, "An error occured");
+}
+
 int main(int argc, char *argv[]) {
     const char *userScript = "require('./example2.js');";
 
     nearSetMethod("helloWorld", helloWorld);
     nearSetMethod("getString", getString);
+    nearSetMethod("badMethod", badMethod);
 
     nearInit(nullptr, userScript, nullptr, nullptr, nullptr);
 

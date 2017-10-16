@@ -19,7 +19,7 @@
 
 #define NEAR_VERSION_MAJOR 0
 #define NEAR_VERSION_MINOR 1
-#define NEAR_VERSION_PATCH 9
+#define NEAR_VERSION_PATCH 10
 
 #define NEAR_VERSION  NODE_STRINGIFY(NEAR_VERSION_MAJOR) "." \
                       NODE_STRINGIFY(NEAR_VERSION_MINOR) "." \
@@ -58,6 +58,11 @@ namespace near {
                                          NearHostCallCallback _nearHostCall);
     extern "C" NEAR_EXTERN void nearSetMethod(const char *methodName, methodPointer pointer);
     extern "C" NEAR_EXTERN void nearReturn(v8::FunctionCallbackInfo<v8::Value> &args, const char * returnValue);
+    extern "C" NEAR_EXTERN void nearRangeError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
+    extern "C" NEAR_EXTERN void nearReferenceError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
+    extern "C" NEAR_EXTERN void nearSyntaxError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
+    extern "C" NEAR_EXTERN void nearTypeError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
+    extern "C" NEAR_EXTERN void nearError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
 
     class ArrayBufferAllocator : public ArrayBuffer::Allocator {
     public:
@@ -395,6 +400,31 @@ namespace near {
 
     void nearSetMethod(const char *methodName, methodPointer pointer) {
         userMethods.push_back(UserMethod(methodName, pointer));
+    }
+
+    void nearRangeError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage){
+        Isolate* isolate = args.GetIsolate();
+        isolate->ThrowException(Exception::RangeError(String::NewFromUtf8(isolate, errorMessage)));
+    }
+
+    void nearReferenceError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage){
+        Isolate* isolate = args.GetIsolate();
+        isolate->ThrowException(Exception::ReferenceError(String::NewFromUtf8(isolate, errorMessage)));
+    }
+
+    void nearSyntaxError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage){
+        Isolate* isolate = args.GetIsolate();
+        isolate->ThrowException(Exception::SyntaxError(String::NewFromUtf8(isolate, errorMessage)));
+    }
+
+    void nearTypeError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage){
+        Isolate* isolate = args.GetIsolate();
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, errorMessage)));
+    }
+
+    void nearError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage){
+        Isolate* isolate = args.GetIsolate();
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, errorMessage)));
     }
 
     void nearReturn(v8::FunctionCallbackInfo<v8::Value> &args, const char * returnValue){

@@ -7,7 +7,7 @@
 #include "uv.h"
 #include "node.h"
 
-typedef const v8::FunctionCallbackInfo<v8::Value> &NearArguments;
+typedef const v8::FunctionCallbackInfo<v8::Value>& NearArguments;
 
 typedef void  (*NearOnloadCB)(void *isolate);
 
@@ -30,5 +30,9 @@ extern "C" int nearJSEmit(const char *name, const char *value);
 extern "C" int nearHostOn(const char *name, NearHostonCB);
 extern "C" void nearSetMethod(const char *methodName, nearMethodPointer pointer);
 extern "C" void nearReturn(NearArguments &args, const char * returnValue);
+extern "C" void nearReferenceError(NearArguments &args, const char * errorMessage);
+extern "C" void nearSyntaxError(NearArguments &args, const char * errorMessage);
+extern "C" void nearTypeError(NearArguments &args, const char * errorMessage);
+extern "C" void nearError(NearArguments &args, const char * errorMessage);
 
 #endif //NEARJS_NEAR_HPP
