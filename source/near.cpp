@@ -57,6 +57,7 @@ namespace near {
                                          NearOnunloadCallback _nearOnUnload,
                                          NearHostCallCallback _nearHostCall);
     extern "C" NEAR_EXTERN void nearSetMethod(const char *methodName, methodPointer pointer);
+    extern "C" NEAR_EXTERN void nearReturn(v8::FunctionCallbackInfo<v8::Value> &args, int returnValue);
 
     class ArrayBufferAllocator : public ArrayBuffer::Allocator {
     public:
@@ -394,6 +395,11 @@ namespace near {
 
     void nearSetMethod(const char *methodName, methodPointer pointer) {
         userMethods.push_back(UserMethod(methodName, pointer));
+    }
+
+    void nearReturn(v8::FunctionCallbackInfo<v8::Value> &args, int returnValue){
+        Isolate *isolate = args.GetIsolate();
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, to_string(returnValue).c_str()));
     }
 
     static void init(Local<Object> exports) {

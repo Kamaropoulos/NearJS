@@ -28,5 +28,6 @@ extern "C" int nearJSCall(const char *name, const char *value, char *dest, size_
 extern "C" int nearJSEmit(const char *name, const char *value);
 extern "C" int nearHostOn(const char *name, NearHostonCB);
 extern "C" void nearSetMethod(const char *methodName, nearMethodPointer pointer);
+extern "C" void nearReturn(NearArguments &args, int returnValue);
 
 #endif //NEARJS_NEAR_HPP
