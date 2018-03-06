@@ -34,5 +34,5 @@ extern "C" void nearReferenceError(NearArguments &args, const char * errorMessag
 extern "C" void nearSyntaxError(NearArguments &args, const char * errorMessage);
 extern "C" void nearTypeError(NearArguments &args, const char * errorMessage);
 extern "C" void nearError(NearArguments &args, const char * errorMessage);
-
+extern "C" void addMessage(std::string name, std::string content);
 #endif //NEARJS_NEAR_HPP
