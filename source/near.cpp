@@ -106,7 +106,6 @@ struct qobj{ std::string name; std::string content; };
     std::condition_variable cv;
     std::mutex mtx;
     bool notify_ = false;
-    std::atomic<bool> quit_;
     std::queue<qobj> messageQueue;
 	
 
@@ -123,14 +122,7 @@ struct qobj{ std::string name; std::string content; };
         cv.notify_one();
     }
     
-    void quit() {
-        {
-            std::lock_guard<std::mutex> lk(mtx);
-            quit_ = true;
-            notify_ = true;
-        }
-        cv.notify_one();
-    }
+
     
 // FIXME : vardic arguments? multiple listeners?
     using Callback = std::map<std::string, Persistent<Function>>;
@@ -611,12 +603,9 @@ struct qobj{ std::string name; std::string content; };
             do {
 
             while(!messageQueue.empty() && smt < 100 ) {
-				//std::cout << " v pici" << std::endl;
                 qobj codeToRun = std::move(messageQueue.front());
-				//std::cout << messageQueue.size() << std::endl;
                 messageQueue.pop();
 				nearJSEmit(codeToRun.name.c_str(), codeToRun.content.c_str());
-				//std::cout << "emit id" << std::this_thread::get_id() << std::endl;
 				smt++;
             }
 			smt = 0;
