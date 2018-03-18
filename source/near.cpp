@@ -278,7 +278,7 @@ struct qobj{ std::string name; std::string content; };
     struct async_req {
         uv_work_t req;
         std::string name;
-       Handle<Value> value;
+		std::string value;
         Isolate *isolate;
         // Persistent<Function> callback;
     };
@@ -294,7 +294,6 @@ struct qobj{ std::string name; std::string content; };
 
         // printf("AfterAsync\n");
         async_req *req = reinterpret_cast<async_req *>(r->data);
-
         if (eventListeners->count(req->name) == 0) {
             delete req;
             return;
@@ -306,7 +305,7 @@ struct qobj{ std::string name; std::string content; };
         HandleScope scope(isolate);
 
         std::vector<Local<Value>> argv;
-        Local<Value> argument = req->value;  //value.c_str()
+        Local<Value> argument = v8::JSON::Parse(String::NewFromUtf8(isolate, req->value.c_str()));  //value.c_str()
         argv.push_back(argument);
 
 
@@ -326,14 +325,13 @@ struct qobj{ std::string name; std::string content; };
     }
 
     int nearJSEmit(const char *name, const char *value) {
-        async_req *req = new async_req;
+        async_req* req = new async_req;
         req->req.data = req;
         req->isolate = isolate_; // FIXME : ...
 
-        req->name = std::string(name);  // FIXME : use pointer
-		Handle<Value> test = v8::JSON::Parse(String::NewFromUtf8(isolate_, value));
-        req->value = test;
-
+        req->name = name;  // FIXME : use pointer
+        req->value = value;
+		
         uv_queue_work(loop,
                       &req->req,
                       DoAsync,
