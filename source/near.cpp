@@ -10,6 +10,12 @@
 #include "libplatform/libplatform.h"
 #include "uv.h"
 #include "node.h"
+#include <condition_variable>
+#include <mutex>
+#include <memory>
+#include <thread>
+#include <atomic>
+#include <queue>
 
 #ifdef _WIN32
 #define NEAR_EXTERN __declspec(dllexport)
@@ -41,7 +47,7 @@ namespace near {
 
     typedef void  (*NearOnunloadCallback)(void *, int);
 
-    typedef char *(*NearHostCallCallback)(const char *, const char *);
+    typedef std::string (*NearHostCallCallback)(const char *, const char *);
 
     typedef void  (*NearHostonCB)(int argc, char **argv);
 
@@ -63,6 +69,7 @@ namespace near {
     extern "C" NEAR_EXTERN void nearSyntaxError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
     extern "C" NEAR_EXTERN void nearTypeError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
     extern "C" NEAR_EXTERN void nearError(v8::FunctionCallbackInfo<v8::Value> &args, const char * errorMessage);
+    extern "C" NEAR_EXTERN void addMessage(std::string name, std::string content);
 
     class ArrayBufferAllocator : public ArrayBuffer::Allocator {
     public:
@@ -94,7 +101,29 @@ namespace near {
     NearOnloadCallback nearOnLoad;
     NearOnunloadCallback nearOnUnload;
     NearHostCallCallback nearHostCall;
+struct qobj{ std::string name; std::string content; };
 
+    std::condition_variable cv;
+    std::mutex mtx;
+    bool notify_ = false;
+    std::queue<qobj> messageQueue;
+	
+
+    void addMessage(std::string name, std::string content) {
+        std::lock_guard<std::mutex> lk(mtx);
+		messageQueue.push({name, content});
+    }
+    
+    void notify() {
+        {
+            std::lock_guard<std::mutex> lk(mtx);
+            notify_ = true;
+        }
+        cv.notify_one();
+    }
+    
+
+    
 // FIXME : vardic arguments? multiple listeners?
     using Callback = std::map<std::string, Persistent<Function>>;
     static Callback *eventListeners;
@@ -225,8 +254,7 @@ namespace near {
             args.GetIsolate()->ThrowException(String::NewFromUtf8(isolate, "Argument 1 must be a string"));
             return;
         }
-
-
+		Handle<Value> test;
         {
             // FIXME : better way to serialize/deserialize?
             result = Stringify(isolate, context, args[1]);
@@ -237,11 +265,12 @@ namespace near {
             String::Utf8Value value(result);
             const char *c_value = *value;
 
-            char *ret = nearHostCall(c_key, c_value);
-            result = String::NewFromUtf8(isolate, ret, NewStringType::kNormal).ToLocalChecked();
-        }
+            std::string ret = nearHostCall(c_key, c_value);
+			test = v8::JSON::Parse(String::NewFromUtf8(isolate, ret.c_str()));
 
-        args.GetReturnValue().Set(result);
+        }
+		//v8::JSON::Parse(str)
+        args.GetReturnValue().Set(test);
     }
 
 
@@ -249,7 +278,7 @@ namespace near {
     struct async_req {
         uv_work_t req;
         std::string name;
-        std::string value;
+		std::string value;
         Isolate *isolate;
         // Persistent<Function> callback;
     };
@@ -265,7 +294,6 @@ namespace near {
 
         // printf("AfterAsync\n");
         async_req *req = reinterpret_cast<async_req *>(r->data);
-
         if (eventListeners->count(req->name) == 0) {
             delete req;
             return;
@@ -277,7 +305,7 @@ namespace near {
         HandleScope scope(isolate);
 
         std::vector<Local<Value>> argv;
-        Local<Value> argument = String::NewFromUtf8(isolate, req->value.c_str());  //value.c_str()
+        Local<Value> argument = v8::JSON::Parse(String::NewFromUtf8(isolate, req->value.c_str()));  //value.c_str()
         argv.push_back(argument);
 
 
@@ -297,13 +325,13 @@ namespace near {
     }
 
     int nearJSEmit(const char *name, const char *value) {
-        async_req *req = new async_req;
+        async_req* req = new async_req;
         req->req.data = req;
         req->isolate = isolate_; // FIXME : ...
 
-        req->name = std::string(name);  // FIXME : use pointer
-        req->value = std::string(value);
-
+        req->name = name;  // FIXME : use pointer
+        req->value = value;
+		
         uv_queue_work(loop,
                       &req->req,
                       DoAsync,
@@ -532,9 +560,10 @@ namespace near {
                         nearObject,
                         static_cast<PropertyAttribute>(v8::ReadOnly | v8::DontDelete)
                 ).FromJust();
-
+				
                 init(nearObject);
             }
+			
             {
                 // 'node/lib/internal/bootstrap_node.js' is lazily loaded.
                 std::string source = "";
@@ -567,9 +596,19 @@ namespace near {
                 }
             }
             /* */
-
             bool more;
+			int smt = 0;
             do {
+
+            while(!messageQueue.empty() && smt < 100 ) {
+                qobj codeToRun = std::move(messageQueue.front());
+                messageQueue.pop();
+				nearJSEmit(codeToRun.name.c_str(), codeToRun.content.c_str());
+				smt++;
+            }
+			smt = 0;
+            notify_ = false;
+
                 platform::PumpMessageLoop(platform_, isolate_);
                 more = uv_run(loop, UV_RUN_ONCE);
                 if (more == false) {
@@ -591,6 +630,7 @@ namespace near {
         }
     }
 
+	
     void nearInit(const char *processName,
                   const char *userScript,
                   NearOnloadCallback _nearOnLoad,
@@ -606,12 +646,8 @@ namespace near {
         near::nearOnLoad = _nearOnLoad;
         near::nearOnUnload = _nearOnUnload;
         near::nearHostCall = _nearHostCall;
-
-        // start the node.js in a thread
-        std::thread n(_node,
-                      (!processName) ? "near" : processName,
-                      userScript);
-        n.detach();
+	
+       _node(processName, userScript);
     }
 
-}  // namespace near
+} 

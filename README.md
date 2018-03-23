@@ -81,18 +81,20 @@ char* nearHostCall(const char* name, const char* value) {
 int main(int argc, char *argv[]) {
   const char* userScript = "require('./app.js');";
 
-  nearInit(argv[0],
+  std::thread n(nearInit, "near",
            userScript,
            nearOnLoad,
            nearOnUnload,
            nearHostCall);
+  n.detach();
 
   // dummy loop in host
   static int i = 0;
   
   while(true) {
     SLEEP_ONE_SECOND;
-    nearJSEmit("test", to_string(i++).c_str());
+    //nearJSEmit("test", to_string(i++).c_str());
+    addMessage("test", "{key:\"value\"}");
   }
 
   return 0;
