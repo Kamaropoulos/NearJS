@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     static int i = 0;
     while (true) {
         SLEEP_ONE_SECOND;
-        nearJSEmit("test", to_string(i++).c_str());
+        addMessage("test", "{key:\"value\"}");
     }
 
     return 0;
